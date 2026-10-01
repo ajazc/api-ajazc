@@ -1,0 +1,22 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Base de datos y media
+db.sqlite3
+*.sqlite3
+media/
+
+# Editor
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd

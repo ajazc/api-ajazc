@@ -1,0 +1,59 @@
+from decimal import Decimal
+
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from .models import Producto
+
+
+class ProductoApiTests(APITestCase):
+	def setUp(self):
+		self.user = User.objects.create_user(username='producto_test', password='test-password-123')
+		self.client.force_authenticate(self.user)
+
+	def test_list_and_create_product(self):
+		response = self.client.post(
+			'/api/productos/',
+			{
+				'codigo': 'PROD-001',
+				'nombre': 'Producto de prueba',
+				'descripcion': 'Descripcion de prueba',
+				'cantidad_disponible': 10,
+				'precio': '12.50',
+			},
+			format='json',
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		self.assertEqual(response.data['codigo'], 'PROD-001')
+		self.assertEqual(Producto.objects.get(codigo='PROD-001').precio, Decimal('12.50'))
+
+		response = self.client.get('/api/productos/')
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(len(response.data['results']), 1)
+
+	def test_product_detail_update_and_delete(self):
+		Producto.objects.create(codigo='PROD-002', nombre='Inicial', precio=Decimal('5.00'))
+
+		response = self.client.patch(
+			'/api/productos/PROD-002/',
+			{'cantidad_disponible': 4},
+			format='json',
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['cantidad_disponible'], 4)
+
+		response = self.client.delete('/api/productos/PROD-002/')
+
+		self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+		self.assertFalse(Producto.objects.filter(codigo='PROD-002').exists())
+
+	def test_product_endpoints_require_authentication(self):
+		self.client.force_authenticate(user=None)
+
+		response = self.client.get('/api/productos/')
+
+		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
