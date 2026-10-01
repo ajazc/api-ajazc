@@ -68,11 +68,17 @@ Respuesta esperada:
 
 ### 2) Usar el token JWT
 
-Incluí el access token en el header `Authorization`:
+Incluí el access token en el header `Authorization` para las operaciones de escritura:
 
 ```bash
 curl http://localhost:8000/api/productos/ \
   -H "Authorization: Bearer <access_token>"
+```
+
+Los endpoints de lectura de productos son públicos, así que podés consultar sin token:
+
+```bash
+curl http://localhost:8000/api/productos/
 ```
 
 ## Endpoints
@@ -91,15 +97,15 @@ curl http://localhost:8000/api/productos/ \
 ### Productos
 
 - `GET /api/productos/`
-  - Lista todos los productos
+  - Lista todos los productos, visible para todos
 - `POST /api/productos/`
-  - Crea un producto nuevo
+  - Crea un producto nuevo (requiere autenticación)
 - `GET /api/productos/<codigo>/`
-  - Detalle de un producto
-- `PATCH /api/productos/<codigo>/`
-  - Actualiza un producto
+  - Detalle público de un producto
+- `PATCH /api/productos/<codigo>/editar/`
+  - Edita nombre, descripción, cantidad, precio e imagen (requiere autenticación)
 - `DELETE /api/productos/<codigo>/`
-  - Elimina un producto
+  - Elimina un producto (requiere autenticación)
 
 ### Ejemplo de creación de producto con imagen
 
@@ -112,6 +118,18 @@ curl -X POST http://localhost:8000/api/productos/ \
   -F "cantidad_disponible=10" \
   -F "precio=1299.99" \
   -F "imagen=@/ruta/a/tu-imagen.jpg"
+```
+
+### Ejemplo de edición del producto
+
+```bash
+curl -X PATCH http://localhost:8000/api/productos/PROD-100/editar/ \
+  -H "Authorization: Bearer <access_token>" \
+  -F "nombre=Notebook Pro" \
+  -F "descripcion=Nueva descripcion del producto" \
+  -F "cantidad_disponible=7" \
+  -F "precio=1399.99" \
+  -F "imagen=@/ruta/a/nueva-imagen.jpg"
 ```
 
 Respuesta tipo:

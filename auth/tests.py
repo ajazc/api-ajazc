@@ -80,9 +80,49 @@ class ProductoApiTests(APITestCase):
 		self.assertIn('imagen', response.data)
 		self.assertTrue(Producto.objects.get(codigo='PROD-003').imagen)
 
-	def test_product_endpoints_require_authentication(self):
+	def test_product_list_and_detail_are_public(self):
+		Producto.objects.create(codigo='PROD-004', nombre='Publico', descripcion='Visible', precio=Decimal('7.00'))
 		self.client.force_authenticate(user=None)
 
 		response = self.client.get('/api/productos/')
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertGreaterEqual(len(response.data['results']), 1)
 
+		response = self.client.get('/api/productos/PROD-004/')
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['descripcion'], 'Visible')
+
+	def test_edit_endpoint_updates_product_data(self):
+		Producto.objects.create(codigo='PROD-005', nombre='Antes', descripcion='Viejo', cantidad_disponible=1, precio=Decimal('10.00'))
+		buffer = BytesIO()
+		Image.new('RGB', (2, 2), color='black').save(buffer, format='PNG')
+		buffer.seek(0)
+		image = SimpleUploadedFile('edited.png', buffer.read(), content_type='image/png')
+
+		response = self.client.patch(
+			'/api/productos/PROD-005/editar/',
+			{
+				'nombre': 'Nuevo nombre',
+				'descripcion': 'Descripcion actualizada',
+				'cantidad_disponible': 8,
+				'precio': '25.50',
+				'imagen': image,
+			},
+			format='multipart',
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertEqual(response.data['nombre'], 'Nuevo nombre')
+		self.assertEqual(response.data['descripcion'], 'Descripcion actualizada')
+		self.assertEqual(response.data['cantidad_disponible'], 8)
+		self.assertEqual(response.data['precio'], '25.50')
+		self.assertIn('imagen', response.data)
+
+	def test_product_endpoints_require_authentication_for_write(self):
+		self.client.force_authenticate(user=None)
+
+		response = self.client.post('/api/productos/', {'codigo': 'PROD-006', 'nombre': 'No permitido', 'precio': '1.00'}, format='json')
+		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+		response = self.client.patch('/api/productos/PROD-005/editar/', {'nombre': 'No permitido'}, format='json')
 		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

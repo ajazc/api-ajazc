@@ -5,6 +5,7 @@ from .views import (
     LoginView,
     MeView,
     ProductoDetailView,
+    ProductoEditView,
     ProductoListCreateView,
     RegisterView,
     TokenRefreshViewCustom,
@@ -17,4 +18,5 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('productos/', ProductoListCreateView.as_view(), name='producto-list'),
     path('productos/<str:codigo>/', ProductoDetailView.as_view(), name='producto-detail'),
+    path('productos/<str:codigo>/editar/', ProductoEditView.as_view(), name='producto-edit'),
 ]

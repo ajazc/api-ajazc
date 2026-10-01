@@ -6,6 +6,7 @@
 - POST /api/auth/register/ -> crea un usuario nuevo
 """
 from rest_framework import generics, permissions
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .models import Producto
@@ -42,16 +43,35 @@ class RegisterView(generics.CreateAPIView):
 
 
 class ProductoListCreateView(generics.ListCreateAPIView):
-    """Lista productos o crea uno nuevo."""
+    """Lista productos para todos y crea nuevos solo si el usuario está autenticado."""
     serializer_class = ProductoSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'codigo'
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         return Producto.objects.all()
 
 
 class ProductoDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Consulta, actualiza o elimina un producto por su codigo."""
+    """Consulta pública, actualiza o elimina un producto por su codigo."""
+    serializer_class = ProductoSerializer
+    lookup_field = 'codigo'
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        return Producto.objects.all()
+
+
+class ProductoEditView(generics.UpdateAPIView):
+    """Endpoint dedicado para editar producto con foto, cantidad, nombre y descripción."""
     serializer_class = ProductoSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = 'codigo'
