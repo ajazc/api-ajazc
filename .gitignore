@@ -10,7 +10,8 @@ venv/
 # Base de datos y media
 db.sqlite3
 *.sqlite3
-media/
+media/*
+!media/.gitkeep
 
 # Editor
 .vscode/

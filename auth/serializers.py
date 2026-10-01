@@ -33,12 +33,15 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class ProductoSerializer(serializers.ModelSerializer):
+    imagen = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = Producto
         fields = (
             'codigo',
             'nombre',
             'descripcion',
+            'imagen',
             'cantidad_disponible',
             'precio',
             'created_at',

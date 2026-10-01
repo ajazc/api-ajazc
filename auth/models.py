@@ -8,6 +8,7 @@ class Producto(models.Model):
 	codigo = models.CharField(max_length=20, primary_key=True)
 	nombre = models.CharField(max_length=100)
 	descripcion = models.TextField(null=True, blank=True)
+	imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
 	cantidad_disponible = models.PositiveIntegerField(default=0)
 	precio = models.DecimalField(
 		max_digits=10,

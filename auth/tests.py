@@ -1,6 +1,9 @@
 from decimal import Decimal
+from io import BytesIO
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -50,6 +53,32 @@ class ProductoApiTests(APITestCase):
 
 		self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 		self.assertFalse(Producto.objects.filter(codigo='PROD-002').exists())
+
+	def test_product_can_store_image(self):
+		buffer = BytesIO()
+		Image.new('RGB', (1, 1), color='white').save(buffer, format='PNG')
+		buffer.seek(0)
+		image = SimpleUploadedFile(
+			'name.png',
+			buffer.read(),
+			content_type='image/png',
+		)
+
+		response = self.client.post(
+			'/api/productos/',
+			{
+				'codigo': 'PROD-003',
+				'nombre': 'Producto con imagen',
+				'cantidad_disponible': 2,
+				'precio': '9.99',
+				'imagen': image,
+			},
+			format='multipart',
+		)
+
+		self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+		self.assertIn('imagen', response.data)
+		self.assertTrue(Producto.objects.get(codigo='PROD-003').imagen)
 
 	def test_product_endpoints_require_authentication(self):
 		self.client.force_authenticate(user=None)
